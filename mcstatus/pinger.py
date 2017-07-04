@@ -123,6 +123,55 @@ class PingResponse:
                 raise ValueError("Invalid version object (expected 'protocol' to be int, was %s)" % type(raw["protocol"]))
             self.protocol = raw["protocol"]
 
+    class ModInfo:
+
+        class Mod:
+            def __init__(self, raw):
+                if type(raw) is not dict:
+                    raise ValueError("Invalid mod object (expected dict, found %s)" % type(raw))
+
+                if 'modid' not in raw:
+                    raise ValueError("Invalid mod object (no 'modid' value")
+                if not isinstance(raw['modid'], string_types):
+                    raise ValueError("Invalid mod object (expected 'modid' to be str, was %s)" % type(raw['type']))
+
+                self.mod_id = raw['modid']
+
+                if 'version' not in raw:
+                    raise ValueError("Invalid mod object (no 'version' value")
+                if not isinstance(raw['version'], string_types):
+                    raise ValueError("Invalid mod object (expected 'version' to be str, was %s)" % type(raw['type']))
+
+                self.version = raw['version']
+
+            def __repr__(self):
+                return '%s[%s]' % (self.mod_id, self.version)
+
+            def __str__(self):
+                return self.__repr__()
+
+        def __init__(self, raw):
+            if type(raw) is not dict:
+                raise ValueError("Invalid modinfo object (expected dict, found %s)" % type(raw))
+
+            # ModInfo is a more abstract type, since there is no clear documentation for it. For now we only support FML
+            if 'type' not in raw:
+                raise ValueError("Invalid modinfo object (no 'type' value")
+            if not isinstance(raw['type'], string_types):
+                raise ValueError("Invalid modinfo object (expected 'type' to be str, was %s)" % type(raw['type']))
+
+            self.type = raw['type']
+
+            if 'modList' not in raw:
+                raise ValueError("Invalid modinfo object (no 'modList' value")
+            if not isinstance(raw['modList'], list):
+                raise ValueError("Invalid modinfo object (expected 'modList' to be list, was %s)" % type(raw['type']))
+
+            self.mod_list = []
+
+            for mod in raw['modList']:
+                self.mod_list.append(self.Mod(mod))
+
     def __init__(self, raw):
         self.raw = raw
 
@@ -142,5 +191,11 @@ class PingResponse:
             self.favicon = raw["favicon"]
         else:
             self.favicon = None
+
+        self.is_modded = False
+        self.mod_info = None
+        if 'modinfo' in raw:
+            self.is_modded = True
+            self.mod_info = self.ModInfo(raw['modinfo'])
 
         self.latency = None
